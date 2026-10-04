@@ -72,6 +72,9 @@
 	};
 	const tone = $derived(tones[type.status]);
 	const isEmpty = $derived(!tasksStore.isLoadingTasks && filteredTasks.length === 0);
+	const isHiddenBySearch = $derived(
+		!tasksStore.isLoadingTasks && search.trim() !== '' && filteredTasks.length === 0
+	);
 </script>
 
 {#snippet dropHint()}
@@ -95,7 +98,7 @@
 		</span>
 	</div>
 {/snippet}
-<div class={style ? style : ''}>
+<div class="{style ? style : ''} {isHiddenBySearch ? 'hidden!' : ''}" >
 	<!-- Header -->
 	<header class="mb-5 flex items-start justify-between gap-3 px-1">
 		<div class="flex items-center gap-3">

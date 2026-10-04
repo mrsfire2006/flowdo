@@ -14,10 +14,11 @@
 	function listClass(status: TaskStatus) {
 		const matches = statusFilter === status;
 		const isAll = statusFilter === 'ALL';
+		const searching = search.trim() !== '';
 
 		const desktop = isAll || matches ? '@[650px]:block' : '@[650px]:hidden';
 
-		const mobileVisible = matches || (isAll && status === 'INBOX');
+		const mobileVisible = matches || (isAll && (status === 'INBOX' || searching));
 		const mobile = mobileVisible ? 'block' : 'hidden';
 
 		return `${mobile} ${desktop}`;
@@ -135,7 +136,9 @@
 
 <!-- Tasks -->
 <div class="@container">
-	<div class="grid grid-cols-1 items-start gap-5 @[650px]:grid-cols-3">
+	<div
+		class="grid grid-cols-1 items-start gap-5 @[650px]:auto-cols-fr @[650px]:grid-flow-col @[650px]:grid-cols-none"
+	>
 		<TaskList
 			type={{
 				status: 'INBOX',
