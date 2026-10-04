@@ -1,19 +1,25 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { authClient } from '$lib/auth-client';
+	import { getTasksContext } from '$lib/components/contexts/tasks/tasks.context.svelte';
+	import { getUserContext } from '$lib/components/contexts/user/user.context.svelte';
 	import FlowdoIcon from '$lib/components/shared/FlowdoIcon.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { ChevronsUpDown, LoaderCircle, LogOut } from '@lucide/svelte';
+	import { ChevronsUpDown, Focus, LayoutList, LoaderCircle, LogOut } from '@lucide/svelte';
 	let isLoggingOut = $state(false);
-
+	const userStore = getUserContext();
+	const tasksStore = getTasksContext();
 	const handleLogout = async () => {
 		isLoggingOut = true;
 		try {
 			await authClient.signOut({
 				fetchOptions: {
 					onSuccess: async () => {
+						userStore.removeUser();
+						tasksStore.removeTasks();
 						await goto(resolve('/(auth)/login'));
 					}
 				}
@@ -22,6 +28,12 @@
 			isLoggingOut = false;
 		}
 	};
+		const navItems = [
+		{ label: 'Overview', href: resolve("/dashboard/overview"), icon: LayoutList },
+ 		{ label: 'Focus', href: resolve("/dashboard/focus"), icon: Focus },
+ 	] as const;
+
+	const isActive = (href: string) => page.url.pathname.startsWith(href);
 </script>
 
 <Sidebar.Root class="justify-between border-line bg-[#0c0b0a] px-4.5 py-7.5">
@@ -40,7 +52,6 @@
 					JR
 				</span>
 
-	 
 				<span class="grid min-w-0 flex-1 gap-0.5">
 					<strong class="truncate text-[13px] font-bold text-navy">Jordan's space</strong>
 					<small class="truncate text-[11px] text-[#a99b8c]">Personal workspace</small>
@@ -51,7 +62,39 @@
 		</div>
 		<Sidebar.Separator class="mx-0 w-full bg-line" />
 	</Sidebar.Header>
-	<Sidebar.Content></Sidebar.Content>
+	<Sidebar.Content class="overflow-visible pt-6">
+		<Sidebar.Group class="p-0">
+			<Sidebar.GroupLabel
+				class="mb-2 h-auto px-2 text-[11px] font-bold tracking-[0.14em] text-[#6f86a8] uppercase"
+			>
+				Workspace
+			</Sidebar.GroupLabel>
+			<Sidebar.GroupContent>
+				<Sidebar.Menu class="gap-1.5">
+					{#each navItems as item (item.href)}
+						{@const active = isActive(item.href)}
+						<Sidebar.MenuItem>
+							<Sidebar.MenuButton
+								isActive={active}
+								class="relative h-11 gap-3 rounded-xl px-3 text-[13px] font-semibold text-[#9aa7c0] transition-colors before:absolute before:top-1/2 before:-left-4.5 before:h-5 before:w-0.75 before:-translate-y-1/2 before:rounded-r-full before:bg-[#e3a766] before:opacity-0 hover:bg-[#1b1815] hover:text-navy data-[active=true]:bg-[#1f1a14] data-[active=true]:text-navy data-[active=true]:before:opacity-100"
+							>
+								{#snippet child({ props })}
+									<a
+										href={item.href}
+										aria-current={active ? 'page' : undefined}
+										{...props}
+									>
+										<item.icon class="size-4.5 shrink-0" strokeWidth={1.8} />
+										<span>{item.label}</span>
+									</a>
+								{/snippet}
+							</Sidebar.MenuButton>
+						</Sidebar.MenuItem>
+					{/each}
+				</Sidebar.Menu>
+			</Sidebar.GroupContent>
+		</Sidebar.Group>
+	</Sidebar.Content>
 	<Sidebar.Footer class="p-0 pt-4">
 		<Button
 			type="button"

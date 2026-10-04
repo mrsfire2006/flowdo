@@ -2,13 +2,14 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { authClient } from '$lib/auth-client';
+	import { getUserContext } from '$lib/components/contexts/user/user.context.svelte';
 	import { ArrowRight, Eye, EyeOff, LoaderCircle } from '@lucide/svelte';
 
 	let showPassword = $state(false);
 	let loading = $state(false);
 	let error = $state<string | undefined>(undefined);
 	let LoginData = $state({ email: '', password: '' });
-
+	const userStore = getUserContext();
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		error = undefined;
@@ -25,6 +26,7 @@
 				error = err.message;
 				return;
 			}
+			await userStore.loadUser();
 			await goto(resolve('/dashboard/overview'));
 		} catch {
 			error = 'Invalid email or password. Please try again.';

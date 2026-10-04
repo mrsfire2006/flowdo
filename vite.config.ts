@@ -22,7 +22,8 @@ export default defineConfig({
 				config: (config) => {
 					config.include.push('../drizzle.config.ts');
 				}
-			}
+			},
+			inspector: true
 		})
 	]
 });

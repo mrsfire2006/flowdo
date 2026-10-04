@@ -400,9 +400,7 @@ button {
 	color: var(--navy);
 	font-size: 12px;
 }
-.mobile-filter {
-	display: none;
-}
+ 
 .sections-grid {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
@@ -816,11 +814,7 @@ button {
 	.toolbar .outline-button {
 		display: none;
 	}
-	.mobile-filter {
-		display: grid;
-		border: 1px solid var(--line);
-		background: #fffdf8;
-	}
+ 
 	.task-list {
 		grid-template-columns: 1fr;
 	}
@@ -964,10 +958,7 @@ body {
 .search-box input::placeholder {
 	color: #687895;
 }
-.mobile-filter {
-	border-color: var(--line);
-	background: #151d31;
-}
+ 
 .task-card {
 	background: var(--surface);
 	border-color: var(--line);

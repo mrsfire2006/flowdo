@@ -3,7 +3,7 @@ import { requireAuth } from '$lib/server/auth-helper/require-auth';
 import { db } from '$lib/server/db';
 
 import { ServerResult } from '$lib/shared-types/result';
-import type { UpdateTaskRequest } from '$lib/shared-types/task';
+import type { TaskCard, UpdateTaskRequest } from '$lib/shared-types/task';
 import { json } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 
@@ -83,5 +83,15 @@ export const PATCH = requireAuth(async ({ locals, params, request }) => {
 		return json(ServerResult.Failure('Task not found', 404).GetClientResult(), { status: 404 });
 	}
 
-	return json(ServerResult.Success(result).GetClientResult());
+	return json(
+		ServerResult.Success<TaskCard>({
+			id: result.id,
+			title: result.title,
+			description: result.description,
+			durationMinutes: result.estimatedMinutes,
+			priority: result.priority,
+			status: result.status,
+			updatedAt: result.updatedAt.toISOString()
+		}).GetClientResult()
+	);
 });

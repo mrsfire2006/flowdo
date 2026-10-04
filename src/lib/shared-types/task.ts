@@ -6,21 +6,12 @@ export type CreateTaskRequest = Omit<
 >;
 export type TaskCard = Omit<
 	TaskSelect,
-	| 'completedAt'
-	| 'estimatedMinutes'
-	| 'userId'
-	| 'updatedAt'
-	| 'completedAt'
-	| 'createdAt'
+	'completedAt' | 'estimatedMinutes' | 'userId' | 'updatedAt' | 'completedAt' | 'createdAt'
 > & {
 	durationMinutes: TaskSelect['estimatedMinutes'];
+	updatedAt: string;
 };
 
 export type UpdateTaskRequest = Partial<
-	Omit<TaskInsert, 'id' | 'userId' | 'createdAt' | 'updatedAt' |'completedAt'>
+	Omit<TaskInsert, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'completedAt'>
 >;
-
-
-
-
- 

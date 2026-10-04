@@ -9,4 +9,8 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     if (!user) {
         redirect(303, resolve('/(auth)/login'));
     }
+    return {
+        user
+    }
+
 };

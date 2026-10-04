@@ -1,7 +1,7 @@
 import { task } from '$lib/db/schemas/task.schema';
 import { requireAuth } from '$lib/server/auth-helper/require-auth';
 import { db } from '$lib/server/db/index.js';
- 
+
 import { ServerResult } from '$lib/shared-types/result';
 import type { CreateTaskRequest, TaskCard } from '$lib/shared-types/task.js';
 import { json } from '@sveltejs/kit';
@@ -10,14 +10,15 @@ import { eq } from 'drizzle-orm';
 export const GET = requireAuth(async ({ locals }) => {
 	const user = locals.user!;
 
-	const tasks: TaskCard[] = await db
+	const rows = await db
 		.select({
 			id: task.id,
 			title: task.title,
 			description: task.description,
 			status: task.status,
 			priority: task.priority,
-			durationMinutes: task.estimatedMinutes
+			durationMinutes: task.estimatedMinutes,
+			updatedAt: task.updatedAt
 		})
 		.from(task)
 		.where(eq(task.userId, user.id));
@@ -37,7 +38,10 @@ export const GET = requireAuth(async ({ locals }) => {
 	// 				return priority[b.priority!] - priority[a.priority!];
 	// 			})
 	// 	}));
- 
+	const tasks: TaskCard[] = rows.map((task) => ({
+		...task,
+		updatedAt: task.updatedAt.toISOString()
+	}));
 
 	return json(ServerResult.Success<TaskCard[]>(tasks).GetClientResult());
 });
@@ -60,9 +64,18 @@ export const POST = requireAuth(async ({ locals, request }) => {
 		.returning();
 
 	if (result && result.length > 0) {
-		const result = ServerResult.Success().GetClientResult();
-
-		return json(result, { status: 200 });
+		const createdTask = result[0];
+		return json(
+			ServerResult.Success<TaskCard>({
+				id: createdTask.id,
+				title: createdTask.title,
+				description: createdTask.description,
+				durationMinutes: createdTask.estimatedMinutes,
+				priority: createdTask.priority,
+				status: createdTask.status,
+				updatedAt: createdTask.updatedAt.toISOString()
+			}).GetClientResult()
+		);
 	}
 
 	return json(ServerResult.Failure('failed to insert task', 500));
