@@ -62,7 +62,7 @@
 				name="password"
 				type={showPassword ? 'text' : 'password'}
 				placeholder="Enter your password"
-				minlength="8"
+				minlength="3"
 				required
 			/>
 			<button

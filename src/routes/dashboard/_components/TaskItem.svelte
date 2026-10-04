@@ -28,7 +28,6 @@
 		Copy,
 		Flag,
 		GripVertical,
-		LoaderCircle,
 		MoreHorizontal,
 		Pencil,
 		Trash,
