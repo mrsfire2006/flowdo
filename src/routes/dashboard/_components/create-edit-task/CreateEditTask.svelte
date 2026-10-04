@@ -25,7 +25,7 @@
 			{@render trigger()}
 		</Dialog.Trigger>
 	{/if}
-	<Dialog.Content class="bg-[#1b1815] p-[clamp(20px,2vw,25px)]  ring-line md:max-w-125">
+	<Dialog.Content class="bg-[#1b1815] max-h-[calc(100dvh-2rem)] overflow-y-auto p-[clamp(20px,2vw,25px)]  ring-line md:max-w-125">
 		<Dialog.Header>
 			<Dialog.Title>
 				{@render contentTitle()}
