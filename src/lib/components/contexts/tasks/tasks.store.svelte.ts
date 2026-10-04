@@ -30,6 +30,8 @@ export class TaskStore {
 	private queryClient = useQueryClient();
 	errorGetTasks = $state<string>('');
 	isLoadingTasks = $state<boolean>(false);
+	isLoadingDelete = $state<boolean>(false);
+	isLoadingCreate = $state<boolean>(false);
 
 	deleteTask = createMutation(() => ({
 		mutationFn: async (req: { id: string }) => {

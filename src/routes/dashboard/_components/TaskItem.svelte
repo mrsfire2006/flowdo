@@ -36,7 +36,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { cn } from '$lib/utils';
 	import type { TaskPriority } from '$lib/db/schemas/task.schema';
-	import type { CreateTaskRequest, TaskCard } from '$lib/shared-types/task';
+	import type { TaskCard } from '$lib/shared-types/task';
 	import { draggable } from '$lib/draggable';
 
 	import { getTasksContext } from '$lib/components/contexts/tasks/tasks.context.svelte';
@@ -46,24 +46,10 @@
 		onStart?: (id: string) => void;
 		onDone?: (id: string) => void;
 		onEdit: (task: TaskCard) => void;
-		onDuplicate?: (task: CreateTaskRequest) => void;
-		onDelete?: (id: string) => void;
 		class?: string;
-		dragging?: boolean;
-		// handleProps?: Record<string, unknown>;
 	}
 
-	let {
-		task,
-		onStart,
-		onDone,
-		onEdit,
-		onDuplicate,
-		onDelete,
-		dragging = false,
-		// handleProps = {},
-		class: className
-	}: Props = $props();
+	let { task, onStart, onDone, onEdit, class: className }: Props = $props();
 
 	const isDone = $derived(task.status === 'DONE');
 	const isActive = $derived(task.status === 'IN_PROGRESS');
@@ -73,6 +59,23 @@
 		'rounded-md p-1.5 text-muted transition-colors hover:bg-[#26211c] hover:text-navy focus-visible:outline-2 focus-visible:outline-coral';
 
 	const store = getTasksContext();
+
+	const createTask = store.createTask;
+	const deleteTask = store.deleteTask;
+
+	const handleDelete = async () => {
+		await deleteTask.mutateAsync({ id: task.id });
+	};
+	const handleDublicate = async () => {
+		await createTask.mutateAsync({
+			task: {
+				title: task.title,
+				description: task.description,
+				estimatedMinutes: task.durationMinutes,
+				priority: task.priority
+			}
+		});
+	};
 </script>
 
 <article
@@ -85,7 +88,6 @@
 	class={cn(
 		'group   relative rounded-2xl border border-line bg-surface p-5 shadow-[0_6px_18px_#0206172e] transition-colors hover:border-[#4a4034]',
 		isActive && 'border-coral/40 hover:border-coral/60',
-		dragging && 'border-coral/60 opacity-80 shadow-[0_18px_40px_#000000a0] ring-1 ring-coral/40',
 		className
 	)}
 >
@@ -97,8 +99,7 @@
 		class={cn(
 			'absolute top-4.5 -left-5 hidden h-8   w-7 cursor-grab! touch-none items-center justify-start rounded-l-md pl-1 text-muted @[650px]:flex',
 			'opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100',
-			'hover:text-navy focus-visible:outline-2 focus-visible:outline-coral active:cursor-grabbing',
-			dragging && 'cursor-grabbing text-coral opacity-100'
+			'hover:text-navy focus-visible:outline-2 focus-visible:outline-coral active:cursor-grabbing'
 		)}
 	>
 		<GripVertical class="size-4" strokeWidth={1.75} />
@@ -169,13 +170,7 @@
 					<DropdownMenu.Item
 						class="group cursor-pointer gap-3 rounded-lg px-2 py-2 transition-colors
 				focus:bg-white/6 data-highlighted:bg-white/6"
-						onSelect={() =>
-							onDuplicate?.({
-								title: task.title,
-								description: task.description,
-								estimatedMinutes: task.durationMinutes,
-								priority: task.priority
-							})}
+						onSelect={handleDublicate}
 					>
 						<span
 							class="grid size-8 shrink-0 place-items-center rounded-md border border-line bg-white/4
@@ -184,7 +179,9 @@
 							<Copy class="size-4" strokeWidth={1.75} />
 						</span>
 						<span class="grid leading-tight">
-							<span class="text-[13px] font-semibold text-navy">Duplicate</span>
+							<span class="text-[13px] font-semibold text-navy"
+								>{createTask.isPaused ? 'Duplicating' : 'Duplicate'}</span
+							>
 							<span class="text-[11px] text-muted">Create a copy of this task</span>
 						</span>
 					</DropdownMenu.Item>
@@ -195,10 +192,7 @@
 						variant="destructive"
 						class="group cursor-pointer gap-3 rounded-lg px-2 py-2 transition-colors
 				focus:bg-coral/10 data-highlighted:bg-coral/10"
-						onSelect={async () => {
-							await store.deleteTask.mutateAsync({ id: task.id });
-							onDelete?.(task.id);
-						}}
+						onSelect={handleDelete}
 					>
 						<span
 							class="grid size-8 shrink-0 place-items-center rounded-md border border-coral/20 bg-coral/10 text-coral"
@@ -206,7 +200,9 @@
 							<Trash class="size-4" strokeWidth={1.75} />
 						</span>
 						<span class="grid leading-tight">
-							<span class="text-[13px] font-semibold text-coral">Delete</span>
+							<span class="text-[13px] font-semibold text-coral"
+								>{deleteTask.isPending ? 'Deleting' : 'Delete'}</span
+							>
 							<span class="text-[11px] text-coral/60">Remove</span>
 						</span>
 					</DropdownMenu.Item>
@@ -244,12 +240,7 @@
 				{formatEstimate(task.durationMinutes)}
 			</li>
 		{/if}
-		<!-- {#if task.due}
-			<li class={cn('flex items-center gap-1.5', dueStyles[task.dueTone ?? 'later'])}>
-				<CalendarDays class="size-3.5" strokeWidth={1.75} />
-				{task.due}
-			</li>
-		{/if} -->
+
 	</ul>
 
 	<!-- Actions -->

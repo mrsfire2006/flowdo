@@ -225,11 +225,6 @@
 							task: { ...task, status: 'DONE' }
 						});
 					}}
-					onDuplicate={async (t) => {
-						await tasksStore.createTask.mutateAsync({
-							task: t
-						});
-					}}
 				/>
 			{/each}
 		{/if}

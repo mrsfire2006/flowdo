@@ -21,11 +21,15 @@
 	const openCount = $derived(openTasks.length);
 	const plannedMinutes = $derived(openTasks.reduce((sum, t) => sum + (t.durationMinutes ?? 0), 0));
 	const doneCount = $derived(tasksStore.doneTasks.length);
+	const completedMinutes = $derived(
+		tasksStore.doneTasks.reduce((sum, t) => sum + (t.durationMinutes ?? 0), 0)
+	);
 
 	const stats = $derived([
 		{ icon: Target, tone: 'coral', value: String(openCount), label: 'Open tasks' },
 		{ icon: Timer, tone: 'blue', value: `${plannedMinutes} min`, label: 'On your plate' },
-		{ icon: CircleCheck, tone: 'mint', value: String(doneCount), label: 'Completed' }
+		{ icon: CircleCheck, tone: 'mint', value: String(doneCount), label: 'Completed' },
+		{ icon: Timer, tone: 'purple', value: String(completedMinutes), label: 'Time completed' }
 	]);
 </script>
 
@@ -61,3 +65,10 @@
 		</div>
 	{/each}
 </section>
+
+<style>
+	.stat-icon.purple {
+		background: #8e79d91a;
+		color: #8e79d9;
+	}
+</style>
