@@ -55,7 +55,7 @@
 	},
 	"dependencies": {
 		"@atlaskit/pragmatic-drag-and-drop": "^4.0.0",
-		"@lucide/svelte": "^1.48.0",
+		"@lucide/svelte": "^1.51.0",
 		"@tanstack/svelte-query": "^6.3.0",
 		"postgres": "^3.4.9"
 	}

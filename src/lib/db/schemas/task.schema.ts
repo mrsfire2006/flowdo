@@ -16,7 +16,9 @@ export const task = pgTable(
 		status: taskStatus('status').default('INBOX'),
 		priority: taskPriority('priority').default('MEDIUM'),
 		estimatedMinutes: integer('estimated_minutes'),
-		// dependsOnId: text('depends_on_id'),
+
+		focusStartedAt: timestamp('focus_started_at', { withTimezone: true }),
+		focusElapsedSeconds: integer('focus_elapsed_seconds').notNull().default(0),
 
 		completedAt: timestamp('completed_at'),
 

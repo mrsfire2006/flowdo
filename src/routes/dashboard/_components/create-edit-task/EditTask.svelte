@@ -118,8 +118,9 @@
 		}
 	};
 	const priorityList = taskPriority.enumValues;
-	const isEditInboxMode = $derived(status === 'INBOX');
-	const isEditInProgressMode = $derived(status === 'IN_PROGRESS');
+	// const isEditInboxMode = $derived(status === 'INBOX');
+	// const isEditInProgressMode = $derived(status === 'IN_PROGRESS');
+	const isEditDoneMode = $derived(status === 'DONE');
 </script>
 
 <CreateEditTask {open} {onOpenChange}>
@@ -154,7 +155,9 @@
 			<div class="mt-4.25 grid grid-cols-[1fr_1fr] gap-3.5">
 				<!-- Priority -->
 
-				<Field.Field class={!isEditInboxMode ? 'pointer-events-none opacity-50' : ''}>
+				<Field.Field
+					class={isEditDoneMode? 'pointer-events-none opacity-50' : ''}
+				>
 					<Field.Label>Priority</Field.Label>
 					<Select.Root
 						type="single"
@@ -184,9 +187,7 @@
 					</Select.Root>
 				</Field.Field>
 				<!-- Estimate Time -->
-				<Field.Field
-					class={`col-span-2 ${!isEditInboxMode ? 'pointer-events-none opacity-50' : ''}`}
-				>
+				<Field.Field class={`col-span-2 ${isEditDoneMode ? 'pointer-events-none opacity-50' : ''}`}>
 					<Field.Label for="fieldgroup-estimate">Estimate</Field.Label>
 
 					<div class="relative">
@@ -194,7 +195,7 @@
 							id="fieldgroup-estimate"
 							type="number"
 							min="0"
-							step="5"
+							step="1"
 							bind:value={
 								() => updateRequest.estimatedMinutes,
 								(v) => (updateRequest.estimatedMinutes = v ?? 0)
@@ -266,7 +267,6 @@
 						{/each}
 					</div>
 				</Field.Field> -->
-
 			</div>
 			{#if error}
 				<AlertMessage message={error} type="error" />

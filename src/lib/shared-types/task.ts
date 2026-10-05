@@ -2,7 +2,14 @@ import type { TaskInsert, TaskSelect } from '$lib/db/schemas/task.schema';
 
 export type CreateTaskRequest = Omit<
 	TaskInsert,
-	'id' | 'createdAt' | 'updatedAt' | 'userId' | 'status' | 'completedAt'
+	| 'id'
+	| 'createdAt'
+	| 'updatedAt'
+	| 'userId'
+	| 'status'
+	| 'completedAt'
+	| 'focusStartedAt'
+	| 'focusElapsedSeconds'
 >;
 export type TaskCard = Omit<
 	TaskSelect,

@@ -176,7 +176,7 @@
 							id="fieldgroup-estimate"
 							type="number"
 							min="0"
-							step="5"
+							step="1"
 							bind:value={
 								() => createRequest.estimatedMinutes,
 								(v) => (createRequest.estimatedMinutes = v ?? 0)

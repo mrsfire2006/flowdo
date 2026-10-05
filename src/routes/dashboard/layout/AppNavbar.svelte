@@ -79,12 +79,12 @@
 			variant="ghost"
 			size="icon"
 			aria-label="Profile"
-			class="relative size-9 cursor-pointer rounded-full bg-linear-to-br from-[#f7d3c6] to-[#e9a795] text-[11px] font-extrabold tracking-wide text-[#7a2f26] shadow-[0_4px_14px_#e9786233] ring-2 ring-[#e97862]/30 ring-offset-2 ring-offset-[#11100e] transition-all duration-200 hover:-translate-y-px hover:bg-linear-to-br hover:from-[#fbdcd1] hover:to-[#efb3a2] hover:text-[#7a2f26] hover:shadow-[0_6px_18px_#e9786240] hover:ring-[#e97862]/60 focus-visible:ring-coral active:translate-y-0 max-sm:hidden"
+			class="relative size-9 uppercase cursor-pointer rounded-full bg-linear-to-br from-[#f7d3c6] to-[#e9a795] text-[11px] font-extrabold tracking-wide text-[#7a2f26] shadow-[0_4px_14px_#e9786233] ring-2 ring-[#e97862]/30 ring-offset-2 ring-offset-[#11100e] transition-all duration-200 hover:-translate-y-px hover:bg-linear-to-br hover:from-[#fbdcd1] hover:to-[#efb3a2] hover:text-[#7a2f26] hover:shadow-[0_6px_18px_#e9786240] hover:ring-[#e97862]/60 focus-visible:ring-coral active:translate-y-0 max-sm:hidden"
 		>
 			{#if userStore.isLoadingUser || !userStore.userBio}
 				<span class="size-4 animate-pulse rounded-full bg-white/50"></span>
 			{:else}
-				{userStore.userBio?.name}
+				{userStore.userBio?.name.slice(0, 2)}
 			{/if}
 			<span
 				class="absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-[#11100e] bg-[#83b58f]"

@@ -63,7 +63,14 @@ export const PATCH = requireAuth(async ({ locals, params, request }) => {
 		status: req.status,
 		priority: req.priority,
 		estimatedMinutes: req.estimatedMinutes,
-		completedAt: req.status === 'DONE' ? new Date() : null
+		completedAt: req.status === 'DONE' ? new Date() : null,
+		focusElapsedSeconds: req.focusElapsedSeconds,
+		focusStartedAt:
+			req.focusStartedAt === undefined
+				? undefined
+				: req.focusStartedAt === null
+					? null
+					: new Date(req.focusStartedAt)
 	};
 	// if (taskId === updates.dependsOnId) {
 	// 	return json(ServerResult.Failure('Task cannot depends on iteself', 409).GetClientResult(), {
@@ -91,7 +98,9 @@ export const PATCH = requireAuth(async ({ locals, params, request }) => {
 			durationMinutes: result.estimatedMinutes,
 			priority: result.priority,
 			status: result.status,
-			updatedAt: result.updatedAt.toISOString()
+			updatedAt: result.updatedAt.toISOString(),
+			focusElapsedSeconds: result.focusElapsedSeconds,
+			focusStartedAt: result.focusStartedAt
 		}).GetClientResult()
 	);
 });

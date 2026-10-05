@@ -18,7 +18,9 @@ export const GET = requireAuth(async ({ locals }) => {
 			status: task.status,
 			priority: task.priority,
 			durationMinutes: task.estimatedMinutes,
-			updatedAt: task.updatedAt
+			updatedAt: task.updatedAt,
+			focusElapsedSeconds: task.focusElapsedSeconds,
+			focusStartedAt: task.focusStartedAt
 		})
 		.from(task)
 		.where(eq(task.userId, user.id));
@@ -73,7 +75,9 @@ export const POST = requireAuth(async ({ locals, request }) => {
 				durationMinutes: createdTask.estimatedMinutes,
 				priority: createdTask.priority,
 				status: createdTask.status,
-				updatedAt: createdTask.updatedAt.toISOString()
+				updatedAt: createdTask.updatedAt.toISOString(),
+				focusElapsedSeconds: createdTask.focusElapsedSeconds,
+				focusStartedAt: createdTask.focusStartedAt
 			}).GetClientResult()
 		);
 	}

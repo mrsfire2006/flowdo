@@ -39,8 +39,28 @@
 			aria-label="Filter tasks"
 			class="flex size-9 items-center justify-center gap-2 rounded-lg border border-line bg-surface text-muted transition-colors hover:bg-white/6 hover:text-navy md:w-auto md:px-3"
 		>
-			<ListFilter class="size-4" strokeWidth={1.75} />
-			<span class="hidden text-sm font-medium md:inline">Filter</span>
+			<ListFilter class="hidden size-4 md:block" strokeWidth={1.75} />
+
+			<span class="flex md:hidden">
+				{#if statusFilter === 'ALL'}
+					<ListFilter class="size-4" strokeWidth={1.75} />
+				{:else if statusFilter === 'INBOX'}
+					<Inbox class="size-4" strokeWidth={1.75} />
+				{:else if statusFilter === 'IN_PROGRESS'}
+					<Zap class="size-4" strokeWidth={1.75} />
+				{:else}
+					<CircleCheck class="size-4" strokeWidth={1.75} />
+				{/if}
+			</span>
+			<span class="hidden text-sm font-medium md:inline">
+				{statusFilter === 'ALL'
+					? 'Filter'
+					: statusFilter === 'INBOX'
+						? 'Inbox'
+						: statusFilter === 'IN_PROGRESS'
+							? 'In Progress'
+							: 'Done'}
+			</span>
 		</DropdownMenu.Trigger>
 
 		<!-- One Dropdown -->

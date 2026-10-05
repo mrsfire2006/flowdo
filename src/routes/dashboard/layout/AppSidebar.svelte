@@ -10,7 +10,6 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { ChevronsUpDown, Focus, LayoutList, LoaderCircle, LogOut } from '@lucide/svelte';
 	let isLoggingOut = $state(false);
-	const userStore = getUserContext();
 	const tasksStore = getTasksContext();
 	const handleLogout = async () => {
 		isLoggingOut = true;
@@ -28,12 +27,14 @@
 			isLoggingOut = false;
 		}
 	};
-		const navItems = [
-		{ label: 'Overview', href: resolve("/dashboard/overview"), icon: LayoutList },
- 		{ label: 'Focus', href: resolve("/dashboard/focus"), icon: Focus },
- 	] as const;
+	const navItems = [
+		{ label: 'Overview', href: resolve('/dashboard/overview'), icon: LayoutList },
+		{ label: 'Focus', href: resolve('/dashboard/focus'), icon: Focus }
+	] as const;
 
 	const isActive = (href: string) => page.url.pathname.startsWith(href);
+	const userStore = getUserContext();
+	const username = userStore.userBio?.name.slice(0, 2);
 </script>
 
 <Sidebar.Root class="justify-between border-line bg-[#0c0b0a] px-4.5 py-7.5">
@@ -47,9 +48,9 @@
 			>
 				<!-- Avatar -->
 				<span
-					class="grid size-9 shrink-0 place-items-center rounded-full bg-[#d4e7f2] text-[11px] font-extrabold text-[#397087]"
+					class="grid size-9 shrink-0 place-items-center rounded-full bg-[#d4e7f2] text-[11px] font-extrabold text-[#397087] uppercase"
 				>
-					JR
+					{username}
 				</span>
 
 				<span class="grid min-w-0 flex-1 gap-0.5">
@@ -79,11 +80,7 @@
 								class="relative h-11 gap-3 rounded-xl px-3 text-[13px] font-semibold text-[#9aa7c0] transition-colors before:absolute before:top-1/2 before:-left-4.5 before:h-5 before:w-0.75 before:-translate-y-1/2 before:rounded-r-full before:bg-[#e3a766] before:opacity-0 hover:bg-[#1b1815] hover:text-navy data-[active=true]:bg-[#1f1a14] data-[active=true]:text-navy data-[active=true]:before:opacity-100"
 							>
 								{#snippet child({ props })}
-									<a
-										href={item.href}
-										aria-current={active ? 'page' : undefined}
-										{...props}
-									>
+									<a href={item.href} aria-current={active ? 'page' : undefined} {...props}>
 										<item.icon class="size-4.5 shrink-0" strokeWidth={1.8} />
 										<span>{item.label}</span>
 									</a>
