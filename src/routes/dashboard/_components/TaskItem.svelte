@@ -17,6 +17,33 @@
 		const m = min % 60;
 		return m ? `${h}h ${m}m` : `${h}h`;
 	}
+	function formatRelativeDate(value: Date | string, label: string) {
+		const date = new Date(value);
+		const diff = Date.now() - date.getTime();
+
+		const minute = 60 * 1000;
+		const hour = 60 * minute;
+		const day = 24 * hour;
+
+		if (diff < minute) return `${label} just now`;
+
+		if (diff < hour) {
+			const minutes = Math.floor(diff / minute);
+			return `${label} ${minutes}m ago`;
+		}
+
+		if (diff < day) {
+			const hours = Math.floor(diff / hour);
+			return `${label} ${hours}h ago`;
+		}
+
+		if (diff < 2 * day) return `${label} yesterday`;
+
+		return `${label} ${new Intl.DateTimeFormat('en-US', {
+			month: 'short',
+			day: 'numeric'
+		}).format(date)}`;
+	}
 </script>
 
 <script lang="ts">
@@ -124,6 +151,14 @@
 				class={cn('size-6', isActive && 'animate-spin animation-duration-[3s]')}
 				strokeWidth={1.75}
 			/>
+			{#if isDone && task.completedAt}
+				<span
+					class="truncate text-[11px] font-medium text-mint/70"
+					title={new Date(task.completedAt).toLocaleString()}
+				>
+					{formatRelativeDate(task.completedAt, 'Completed')}
+				</span>
+			{/if}
 		</button>
 
 		<div class="flex items-center gap-1">
@@ -240,7 +275,13 @@
 				{formatEstimate(task.durationMinutes)}
 			</li>
 		{/if}
-
+		<li
+			class="ml-auto flex items-center gap-1.5 text-[11px] text-muted/70"
+			title={new Date(task.updatedAt).toLocaleString()}
+		>
+			<Clock class="size-3" strokeWidth={1.75} />
+			{formatRelativeDate(task.updatedAt, 'Updated')}
+		</li>
 	</ul>
 
 	<!-- Actions -->

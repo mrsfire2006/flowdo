@@ -51,6 +51,41 @@
 		});
 	});
 
+	const groupedTasks = $derived.by(() => {
+		const groups: Record<string, TaskCard[]> = {};
+
+		for (const task of filteredTasks) {
+			const createdAt = new Date(task.createdAt);
+			const key = createdAt.toDateString();
+
+			(groups[key] ??= []).push(task);
+		}
+
+		return Object.entries(groups).map(([key, tasks]) => ({
+			key,
+			tasks,
+			label: formatTaskDate(tasks[0].createdAt)
+		}));
+	});
+
+	function formatTaskDate(value: Date | string) {
+		const date = new Date(value);
+		const now = new Date();
+
+		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+		const taskDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+		const diffDays = Math.round((today.getTime() - taskDate.getTime()) / 86_400_000);
+
+		if (diffDays === 0) return 'Today';
+		if (diffDays === 1) return 'Yesterday';
+
+		return new Intl.DateTimeFormat('en-US', {
+			month: 'long',
+			day: 'numeric',
+			year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+		}).format(date);
+	}
 	let selectedTask = $state<TaskCard>();
 	let openPop = $state<boolean>(false);
 	const tones: Record<TaskStatus, { icon: string; emptyTitle: string; emptyHint: string }> = {
@@ -98,7 +133,7 @@
 		</span>
 	</div>
 {/snippet}
-<div class="{style ? style : ''} {isHiddenBySearch ? 'hidden!' : ''}" >
+<div class="{style ? style : ''} {isHiddenBySearch ? 'hidden!' : ''}">
 	<!-- Header -->
 	<header class="mb-5 flex items-start justify-between gap-3 px-1">
 		<div class="flex items-center gap-3">
@@ -209,26 +244,40 @@
 				</div>
 			</div>
 		{:else}
-			{#each filteredTasks as task (task.id)}
-				<TaskItem
-					{task}
-					onEdit={(task) => {
-						selectedTask = task;
-						openPop = true;
-					}}
-					onStart={async (id) => {
-						await tasksStore.updateTask.mutateAsync({
-							id: id,
-							task: { ...task, status: 'IN_PROGRESS' }
-						});
-					}}
-					onDone={async (id) => {
-						await tasksStore.updateTask.mutateAsync({
-							id: id,
-							task: { ...task, status: 'DONE' }
-						});
-					}}
-				/>
+			{#each groupedTasks as group (group.key)}
+				<div class="flex flex-col gap-3">
+					<div class="flex items-center gap-3 px-1">
+						<span class="text-[11px] font-semibold whitespace-nowrap text-[#a99b8c]">
+							{group.label}
+						</span>
+
+						<div class="h-px flex-1 bg-line"></div>
+					</div>
+
+					<div class="flex flex-col gap-3">
+						{#each group.tasks as task (task.id)}
+							<TaskItem
+								{task}
+								onEdit={(task) => {
+									selectedTask = task;
+									openPop = true;
+								}}
+								onStart={async (id) => {
+									await tasksStore.updateTask.mutateAsync({
+										id,
+										task: { ...task, status: 'IN_PROGRESS' }
+									});
+								}}
+								onDone={async (id) => {
+									await tasksStore.updateTask.mutateAsync({
+										id,
+										task: { ...task, status: 'DONE' }
+									});
+								}}
+							/>
+						{/each}
+					</div>
+				</div>
 			{/each}
 		{/if}
 	</div>

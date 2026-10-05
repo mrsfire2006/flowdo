@@ -17,6 +17,8 @@ export type TaskCard = Omit<
 > & {
 	durationMinutes: TaskSelect['estimatedMinutes'];
 	updatedAt: string;
+	createdAt:string;
+	completedAt : string | undefined
 };
 
 export type UpdateTaskRequest = Partial<

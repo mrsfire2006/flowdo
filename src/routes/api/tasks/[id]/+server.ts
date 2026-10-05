@@ -99,6 +99,8 @@ export const PATCH = requireAuth(async ({ locals, params, request }) => {
 			priority: result.priority,
 			status: result.status,
 			updatedAt: result.updatedAt.toISOString(),
+			createdAt: result.createdAt.toISOString(),
+			completedAt: result.completedAt?.toISOString(),
 			focusElapsedSeconds: result.focusElapsedSeconds,
 			focusStartedAt: result.focusStartedAt
 		}).GetClientResult()

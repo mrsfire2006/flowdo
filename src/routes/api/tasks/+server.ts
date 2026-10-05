@@ -19,6 +19,8 @@ export const GET = requireAuth(async ({ locals }) => {
 			priority: task.priority,
 			durationMinutes: task.estimatedMinutes,
 			updatedAt: task.updatedAt,
+			createdAt: task.createdAt,
+			completedAt: task.completedAt,
 			focusElapsedSeconds: task.focusElapsedSeconds,
 			focusStartedAt: task.focusStartedAt
 		})
@@ -42,7 +44,9 @@ export const GET = requireAuth(async ({ locals }) => {
 	// 	}));
 	const tasks: TaskCard[] = rows.map((task) => ({
 		...task,
-		updatedAt: task.updatedAt.toISOString()
+		updatedAt: task.updatedAt.toISOString(),
+		createdAt: task.createdAt.toISOString(),
+		completedAt: task.completedAt?.toISOString()
 	}));
 
 	return json(ServerResult.Success<TaskCard[]>(tasks).GetClientResult());
@@ -76,6 +80,8 @@ export const POST = requireAuth(async ({ locals, request }) => {
 				priority: createdTask.priority,
 				status: createdTask.status,
 				updatedAt: createdTask.updatedAt.toISOString(),
+				createdAt: createdTask.createdAt.toISOString(),
+				completedAt: createdTask.completedAt?.toISOString(),
 				focusElapsedSeconds: createdTask.focusElapsedSeconds,
 				focusStartedAt: createdTask.focusStartedAt
 			}).GetClientResult()

@@ -24,7 +24,11 @@
 		return `${mobile} ${desktop}`;
 	}
 </script>
-
+<svelte:head>
+	<title>
+		Overview . FlowDo
+	</title>
+</svelte:head>
 <OverviewHeader />
 
 <!-- Toolbar -->
