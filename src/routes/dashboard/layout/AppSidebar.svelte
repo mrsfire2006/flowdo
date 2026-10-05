@@ -34,7 +34,7 @@
 
 	const isActive = (href: string) => page.url.pathname.startsWith(href);
 	const userStore = getUserContext();
-	const username = userStore.userBio?.name.slice(0, 2);
+	const username = $derived(userStore.userBio?.name.slice(0, 2));
 </script>
 
 <Sidebar.Root class="justify-between border-line bg-[#0c0b0a] px-4.5 py-7.5">
@@ -54,7 +54,7 @@
 				</span>
 
 				<span class="grid min-w-0 flex-1 gap-0.5">
-					<strong class="truncate text-[13px] font-bold text-navy">Jordan's space</strong>
+					<strong class="truncate text-[13px] font-bold text-navy">{userStore.userBio?.name}'s space</strong>
 					<small class="truncate text-[11px] text-[#a99b8c]">Personal workspace</small>
 				</span>
 
