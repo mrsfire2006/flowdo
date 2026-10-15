@@ -10,6 +10,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { ChevronsUpDown, Focus, LayoutList, LoaderCircle, LogOut } from '@lucide/svelte';
 	let isLoggingOut = $state(false);
+	const { username }: { username: string } = $props();
 	const tasksStore = getTasksContext();
 	const handleLogout = async () => {
 		isLoggingOut = true;
@@ -34,7 +35,7 @@
 
 	const isActive = (href: string) => page.url.pathname.startsWith(href);
 	const userStore = getUserContext();
-	const username = $derived(userStore.userBio?.name.slice(0, 2));
+	const subname = $derived(username.slice(0, 2));
 </script>
 
 <Sidebar.Root class="justify-between border-line bg-[#0c0b0a] px-4.5 py-7.5">
@@ -50,11 +51,11 @@
 				<span
 					class="grid size-9 shrink-0 place-items-center rounded-full bg-[#d4e7f2] text-[11px] font-extrabold text-[#397087] uppercase"
 				>
-					{username}
+					{subname}
 				</span>
 
 				<span class="grid min-w-0 flex-1 gap-0.5">
-					<strong class="truncate text-[13px] font-bold text-navy">{userStore.userBio?.name}'s space</strong>
+					<strong class="truncate text-[13px] font-bold text-navy">{username}'s space</strong>
 					<small class="truncate text-[11px] text-[#a99b8c]">Personal workspace</small>
 				</span>
 

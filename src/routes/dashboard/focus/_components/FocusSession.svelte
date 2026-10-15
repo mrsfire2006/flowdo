@@ -33,9 +33,6 @@
 		const startedMs = task.focusStartedAt ? new Date(task.focusStartedAt).getTime() : NaN;
 		const wasRunning = Number.isFinite(startedMs);
 
-		// If the timer was running, add the time that passed since it started.
-		// Before the planned time ends it is capped at the planned time; during an
-		// "Add 5 minutes" block it is capped at one more block.
 		let elapsed = saved;
 		if (wasRunning) {
 			const passed = Math.max(0, Math.floor((Date.now() - startedMs) / 1000));
@@ -43,16 +40,18 @@
 			elapsed = Math.min(saved + passed, limit);
 		}
 
-		// Time beyond the plan was added in 5-minute blocks.
-		const overtime =
-			elapsed > planned ? Math.ceil((elapsed - planned) / OVERTIME_BLOCK) * OVERTIME_BLOCK : 0;
+		let overtime = 0;
+		if (elapsed > planned) {
+			overtime = Math.ceil((elapsed - planned) / OVERTIME_BLOCK) * OVERTIME_BLOCK;
+		} else if (wasRunning && saved >= planned) {
+			overtime = OVERTIME_BLOCK;
+		}
 
 		let status: Status = 'ready';
 		if (elapsed >= planned + overtime) status = 'done';
-		else if (wasRunning) status = 'running';
-		else if (elapsed > 0) status = 'paused';
+		else if (elapsed > 0) status = 'paused'; // كان: wasRunning ? 'running' : ...
 
-		return { status, elapsed, saved, overtime, wasRunning, startedMs: wasRunning ? startedMs : 0 };
+		return { status, elapsed, saved, overtime, wasRunning, startedMs: 0 };
 	});
 
 	let status = $state<Status>(restored.status);
@@ -63,6 +62,7 @@
 	let elapsedAtStart = restored.saved;
 	let isStarting = $state(false);
 	let isExiting = $state(false);
+	let isCompleting = $state(false);
 	let errorMsg = $state('');
 	let root = $state<HTMLDivElement>();
 
@@ -73,7 +73,6 @@
 	const percentDone = $derived(Math.round((1 - fraction) * 100));
 	const mm = $derived(String(Math.floor(remaining / 60)).padStart(2, '0'));
 	const ss = $derived(String(remaining % 60).padStart(2, '0'));
-	const isSaving = $derived(store.updateTask.isPending);
 	const priorityLabel = $derived(String(task.priority ?? '').toLowerCase());
 
 	const R = 92;
@@ -88,12 +87,26 @@
 		}[status]
 	);
 
+	/* ---- serialized saving ---- */
+
+	/**
+	 * All writes go through one queue, so they reach the server in the order they were
+	 * made (e.g. a late "save progress" can never overwrite a later "DONE").
+	 */
+	let saveQueue: Promise<unknown> = Promise.resolve();
+
+	function enqueue<T>(job: () => Promise<T>): Promise<T> {
+		const run = saveQueue.then(job, job);
+		saveQueue = run.catch(() => {});
+		return run;
+	}
+
 	function tick() {
 		elapsed = elapsedAtStart + Math.floor((Date.now() - startedAt) / 1000);
 		if (elapsed >= totalSec) {
 			elapsed = totalSec;
 			status = 'done';
-			persistProgress();
+			void persistProgress();
 		}
 	}
 
@@ -101,7 +114,9 @@
 		const previous = document.body.style.overflow;
 		document.body.style.overflow = 'hidden';
 		root?.focus();
-		return () => (document.body.style.overflow = previous);
+		return () => {
+			document.body.style.overflow = previous;
+		};
 	});
 
 	$effect(() => {
@@ -112,24 +127,27 @@
 
 	onMount(() => {
 		// The session ended while the page was closed: clear the stale "running" state.
-		if (restored.wasRunning && restored.status === 'done') persistProgress();
+		if (restored.wasRunning) void persistProgress();
 	});
 
 	/* ---- store actions ---- */
 
 	/** Saves the elapsed time and clears focusStartedAt (timer is not running). */
-	async function persistProgress(): Promise<boolean> {
-		try {
-			const result = await store.updateTask.mutateAsync({
-				id: task.id,
-				task: { focusStartedAt: null, focusElapsedSeconds: elapsed }
-			});
-			if (result.isSuccess) return true;
-			errorMsg = result.errorMsg ?? "Couldn't save your progress.";
-		} catch {
-			errorMsg = "Couldn't save your progress. Check your connection.";
-		}
-		return false;
+	function persistProgress(): Promise<boolean> {
+		const elapsedSeconds = elapsed; // value at the moment of the call
+		return enqueue(async () => {
+			try {
+				const result = await store.updateTask.mutateAsync({
+					id: task.id,
+					task: { focusStartedAt: null, focusElapsedSeconds: elapsedSeconds }
+				});
+				if (result.isSuccess) return true;
+				errorMsg = result.errorMsg ?? "Couldn't save your progress.";
+			} catch {
+				errorMsg = "Couldn't save your progress. Check your connection.";
+			}
+			return false;
+		});
 	}
 
 	/**
@@ -139,7 +157,7 @@
 	 * - a changed session length is saved as the task's estimate
 	 * Returns false (and sets errorMsg) if saving fails, so the timer is not started.
 	 */
-	async function saveBeforeStart(startTime: Date): Promise<boolean> {
+	function saveBeforeStart(startTime: Date): Promise<boolean> {
 		const payload: UpdateTaskRequest = {
 			focusStartedAt: startTime,
 			focusElapsedSeconds: elapsed
@@ -150,61 +168,75 @@
 			payload.estimatedMinutes = plannedMinutes;
 		}
 
-		try {
-			const result = await store.updateTask.mutateAsync({ id: task.id, task: payload });
-			if (result.isSuccess) return true;
-			errorMsg = result.errorMsg ?? "Couldn't start the session. Try again.";
-		} catch {
-			errorMsg = "Couldn't start the session. Check your connection and try again.";
-		}
-		return false;
+		return enqueue(async () => {
+			try {
+				const result = await store.updateTask.mutateAsync({ id: task.id, task: payload });
+				if (result.isSuccess) return true;
+				errorMsg = result.errorMsg ?? "Couldn't start the session. Try again.";
+			} catch {
+				errorMsg = "Couldn't start the session. Check your connection and try again.";
+			}
+			return false;
+		});
 	}
 
 	/**
 	 * Marks the task as done. focusElapsedSeconds is kept (it's the time actually spent,
 	 * useful to compare with the estimate); only focusStartedAt is cleared.
+	 * Uses its own `isCompleting` flag, because `updateTask.isPending` is shared with
+	 * background saves (pause / auto-save when time ends) and would make this button
+	 * look busy before the user clicks it.
 	 */
 	async function complete() {
+		if (isCompleting) return;
 		errorMsg = '';
 		if (status === 'running') tick();
 
+		isCompleting = true;
+		// const elapsedSeconds = elapsed;
 		try {
-			const result = await store.updateTask.mutateAsync({
-				id: task.id,
-				task: { status: 'DONE', focusStartedAt: null, focusElapsedSeconds: 0 }
-			});
+			// Queued after any in-flight save, so DONE is always the last write.
+			const result = await enqueue(() =>
+				store.updateTask.mutateAsync({
+					id: task.id,
+					task: { status: 'DONE', focusStartedAt: null, focusElapsedSeconds: 0 }
+				})
+			);
 			if (result.isSuccess) {
- 
 				onexit();
 			} else {
 				errorMsg = result.errorMsg ?? "Couldn't complete this task. Try again.";
 			}
 		} catch {
 			errorMsg = "Couldn't complete this task. Check your connection and try again.";
+		} finally {
+			isCompleting = false;
 		}
 	}
 
 	/* ---- timer controls ---- */
 
-	async function start() {
-		if (isStarting) return;
+	async function start(): Promise<boolean> {
+		if (isStarting) return false;
 		errorMsg = '';
 		const startTime = new Date();
 
 		isStarting = true;
 		const saved = await saveBeforeStart(startTime);
 		isStarting = false;
-		if (!saved) return; // nothing was saved, so the timer does not start
+		if (!saved) return false; // nothing was saved, so the timer does not start
 
 		// Same time that was saved in the DB, so a refresh resumes at the same point.
 		startedAt = startTime.getTime();
 		elapsedAtStart = elapsed;
 		status = 'running';
+		return true;
 	}
 
 	async function pause() {
-		tick();
 		if (status !== 'running') return;
+		tick();
+		if (status !== 'running') return; // tick() ended the session and already saved it
 		status = 'paused';
 		await persistProgress();
 	}
@@ -214,9 +246,11 @@
 		if (isExiting) return;
 
 		isExiting = true;
-		if (status === 'running') await pause();
-
-		isExiting = false;
+		try {
+			if (status === 'running') await pause();
+		} finally {
+			isExiting = false;
+		}
 		onexit();
 	}
 
@@ -225,13 +259,14 @@
 		plannedMinutes = Math.min(MAX_MINUTES, Math.max(MIN_MINUTES, plannedMinutes + deltaMin));
 	}
 
-	function extend() {
+	async function extend() {
+		if (isStarting) return;
 		overtimeSec += OVERTIME_BLOCK;
-		start();
+		const started = await start();
+		// Saving failed: undo the extra block so the UI stays in the "done" state.
+		if (!started) overtimeSec -= OVERTIME_BLOCK;
 	}
 </script>
-
- 
 
 <div
 	bind:this={root}
@@ -407,9 +442,13 @@
 					size="lg"
 					class="border-line bg-surface"
 					onclick={extend}
-					disabled={isStarting}
+					disabled={isStarting || isCompleting}
 				>
-					<Plus class="size-4" />
+					{#if isStarting}
+						<LoaderCircle class="size-4 animate-spin motion-reduce:animate-none" />
+					{:else}
+						<Plus class="size-4" />
+					{/if}
 					Add 5 minutes
 				</Button>
 			{/if}
@@ -422,9 +461,9 @@
 						? 'bg-coral text-white shadow-lg shadow-coral/25 hover:bg-coral/90'
 						: 'border-coral/40 bg-coral/10 text-coral hover:bg-coral/15 hover:text-coral'}"
 					onclick={complete}
-					disabled={isSaving}
+					disabled={isCompleting || isStarting}
 				>
-					{#if isSaving}
+					{#if isCompleting}
 						<LoaderCircle class="size-4 animate-spin motion-reduce:animate-none" />
 					{:else}
 						<Check class="size-4" />

@@ -8,7 +8,7 @@
 	let showPassword = $state(false);
 	let loading = $state(false);
 	let error = $state<string | undefined>(undefined);
-	let LoginData = $state({ email: '', password: '' });
+	let LoginData = $state({ email: '', password: '', rememberMe: true });
 	const userStore = getUserContext();
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -19,7 +19,8 @@
 		try {
 			const { error: err } = await authClient.signIn.email({
 				email: LoginData.email,
-				password: LoginData.password
+				password: LoginData.password,
+				rememberMe: LoginData.rememberMe
 			});
 
 			if (err) {
@@ -78,7 +79,7 @@
 
 	<div class="auth-options">
 		<label class="auth-consent">
-			<input type="checkbox" name="remember" />
+			<input type="checkbox" name="remember"bind:checked={LoginData.rememberMe} />
 			<span>Remember me</span>
 		</label>
 	</div>

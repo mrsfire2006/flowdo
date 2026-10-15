@@ -6,7 +6,6 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { goto } from '$app/navigation';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { getUserContext } from '$lib/components/contexts/user/user.context.svelte';
 
 	const pages = [
 		{ label: 'Overview', href: resolve('/dashboard/overview') },
@@ -16,7 +15,8 @@
 		pages.find((p) => page.url.pathname.startsWith(p.href))?.label ?? 'Overview'
 	);
 
-	const userStore = getUserContext();
+	const { username }: { username: string } = $props();
+	const initials = $derived((username ?? '').trim().slice(0, 2) || '?');
 </script>
 
 <header class="flex h-19.25 items-center justify-between border-b border-line">
@@ -75,20 +75,18 @@
 		>
 			<Bell class="size-4.5" strokeWidth={1.8} />
 		</Button>
-		<Button
-			variant="ghost"
-			size="icon"
+		<button
+			type="button"
 			aria-label="Profile"
-			class="relative size-9 uppercase cursor-pointer rounded-full bg-linear-to-br from-[#f7d3c6] to-[#e9a795] text-[11px] font-extrabold tracking-wide text-[#7a2f26] shadow-[0_4px_14px_#e9786233] ring-2 ring-[#e97862]/30 ring-offset-2 ring-offset-[#11100e] transition-all duration-200 hover:-translate-y-px hover:bg-linear-to-br hover:from-[#fbdcd1] hover:to-[#efb3a2] hover:text-[#7a2f26] hover:shadow-[0_6px_18px_#e9786240] hover:ring-[#e97862]/60 focus-visible:ring-coral active:translate-y-0 max-sm:hidden"
+			title={username}
+			class="relative grid size-9 shrink-0 cursor-pointer place-items-center rounded-full bg-linear-to-br from-[#f9dccf] to-[#e9a795] text-[11px] font-extrabold text-[#7a2f26] uppercase ring-1 ring-[#e97862]/40 ring-offset-2 ring-offset-[#11100e] transition duration-200 hover:ring-[#e97862]/70 hover:brightness-105 focus-visible:ring-2 focus-visible:ring-coral focus-visible:outline-none active:scale-95 max-sm:hidden"
 		>
-			{#if userStore.isLoadingUser || !userStore.userBio}
-				<span class="size-4 animate-pulse rounded-full bg-white/50"></span>
-			{:else}
-				{userStore.userBio?.name.slice(0, 2)}
-			{/if}
+			{initials}
+
 			<span
-				class="absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-[#11100e] bg-[#83b58f]"
+				aria-hidden="true"
+				class="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full bg-[#83b58f] ring-2 ring-[#11100e]"
 			></span>
-		</Button>
+		</button>
 	</div>
 </header>

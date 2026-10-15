@@ -271,7 +271,7 @@
 								onDone={async (id) => {
 									await tasksStore.updateTask.mutateAsync({
 										id,
-										task: { ...task, status: 'DONE' }
+										task: { ...task, status: 'DONE', focusElapsedSeconds: 0 }
 									});
 								}}
 							/>

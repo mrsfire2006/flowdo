@@ -127,7 +127,7 @@
 	{#if !loaded}
 		<div class="mt-8 grid gap-3 sm:mt-10" aria-busy="true" aria-label="Loading tasks">
 			{#each [0, 1, 2] as i (i)}
-				<Skeleton class="h-[116px] rounded-2xl bg-surface" />
+				<Skeleton class="h-29 rounded-2xl bg-surface" />
 			{/each}
 		</div>
 	{:else if store.errorGetTasks}

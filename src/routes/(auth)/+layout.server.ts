@@ -7,4 +7,5 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	if (user) {
 		redirect(303, resolve('/dashboard/overview'));
 	}
+	
 };
